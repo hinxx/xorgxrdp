@@ -23,7 +23,7 @@ jobs:
       - name: Build and package
         run: |
           ./bootstrap
-          ./configure $XRDP_CFLAGS --enable-glamor --prefix=/usr --sysconfdir=/etc
+          ./configure --enable-glamor --prefix=/usr --sysconfdir=/etc
           make -j$(nproc)
           VERSION=$(sed -ne 's/AC_INIT(\[[^]]*\], \[\([^]]*\)\].*/\1/p' configure.ac)
           sudo checkinstall --default --install=no --pkgname=xorgxrdp --pkgversion=${VERSION:-0.0.0} --pkgrelease=1 --fstrans=no --maintainer=github-actions --pakdir=.. make install
