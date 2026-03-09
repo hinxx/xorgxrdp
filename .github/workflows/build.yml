@@ -117,3 +117,31 @@ jobs:
       - run: ./configure $CONF_FLAGS
       - run: make CFLAGS="$CFLAGS -O2 -Wall -Wwrite-strings -Werror"
       - run: make check
+
+  build_deb:
+    name: Build deb package
+    runs-on: ubuntu-22.04
+    env:
+      CC: gcc
+      XRDP_CFLAGS: -I${{ github.workspace }}/xrdp/common
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y checkinstall
+          sudo scripts/install_xorgxrdp_build_dependencies_with_apt.sh amd64
+      - name: Clone xrdp
+        run: git clone --depth 1 --branch=devel https://github.com/neutrinolabs/xrdp.git ${{ github.workspace}}/xrdp
+      - name: Build and package
+        run: |
+          ./bootstrap
+          ./configure $XRDP_CFLAGS --enable-glamor --prefix=/usr --sysconfdir=/etc
+          make -j$(nproc)
+          VERSION=$(sed -ne 's/AC_INIT(\[[^]]*\], \[\([^]]*\)\].*/\1/p' configure.ac)
+          sudo checkinstall --default --install=no --pkgname=xorgxrdp --pkgversion=${VERSION:-0.0.0} --pkgrelease=1 --fstrans=no --maintainer=github-actions --pakdir=.. make install
+      - name: Upload deb package
+        uses: actions/upload-artifact@v4
+        with:
+          name: xorgxrdp-deb
+          path: ../*.deb
