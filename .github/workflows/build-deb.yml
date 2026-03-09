@@ -25,10 +25,15 @@ jobs:
           ./bootstrap
           ./configure --enable-glamor --prefix=/usr --sysconfdir=/etc
           make -j$(nproc)
+          mkdir deb-pkg
           VERSION=$(sed -ne 's/AC_INIT(\[[^]]*\], \[\([^]]*\)\].*/\1/p' configure.ac)
-          sudo checkinstall --default --install=no --pkgname=xorgxrdp --pkgversion=${VERSION:-0.0.0} --pkgrelease=1 --fstrans=no --maintainer=github-actions --pakdir=.. make install
+          sudo checkinstall --default --install=no --pkgname=xorgxrdp --pkgversion=${VERSION:-0.0.0} --pkgrelease=1 --fstrans=no --maintainer=github-actions --pakdir=deb-pkg make install
       - name: Upload deb package
         uses: actions/upload-artifact@v4
         with:
           name: xorgxrdp-deb
-          path: ../*.deb
+          path: deb-pkg/*.deb
+          if-no-files-found: warn
+          compression-level: 6
+          overwrite: false
+          include-hidden-files: false
